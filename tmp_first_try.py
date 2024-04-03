@@ -1,39 +1,44 @@
 from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 from selenium_stealth import stealth
+from selenium.webdriver.chrome.webdriver import WebDriver
 from typing import List
 
 
 class WebScraper:
-    def __init__(self) -> None:
-        self.url: str = 'https://joblab.ru/resume'
-        self.driver = self.__setup_driver()
+    def __init__(self, url: str = 'https://joblab.ru/resume') -> None:
+        self._url: str = url
+        self._driver: WebDriver = self._setup_driver()
 
-    def __setup_driver(self) -> uc.Chrome:
+    def _setup_driver(self) -> WebDriver:
         options = uc.ChromeOptions()
-        driver = uc.Chrome(options=options)
-        self.__apply_stealth(driver)
+        driver: WebDriver = uc.Chrome(options=options)
+        self._apply_stealth(driver)
         return driver
 
-    def __apply_stealth(self, driver: uc.Chrome) -> None:
-        stealth(driver,
-                languages=['en-US', 'en'],
-                vendor='Google Inc.',
-                platform='Win32',
-                webgl_vendor='Intel Inc.',
-                renderer='Intel Iris OpenGL Engine',
-                fix_hairline=True)
+    @staticmethod
+    def _apply_stealth(driver: WebDriver) -> None:
+        stealth(
+            driver,
+            languages=['en-US', 'en'],
+            vendor='Google Inc.',
+            platform='Win32',
+            webgl_vendor='Intel Inc.',
+            renderer='Intel Iris OpenGL Engine',
+            fix_hairline=True
+        )
 
     def fetch_page_source(self) -> str:
-        self.driver.get(self.url)
-        return self.driver.page_source
+        self._driver.get(self._url)
+        return self._driver.page_source
 
-    def parse_content(self, html: str) -> List[str]:
+    @classmethod
+    def parse_content(cls, html: str) -> List[str]:
         soup = BeautifulSoup(html, 'html.parser')
         return [element.text for element in soup.find_all('p')]
 
     def close(self) -> None:
-        self.driver.quit()
+        self._driver.quit()
 
 
 if __name__ == '__main__':
