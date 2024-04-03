@@ -30,7 +30,9 @@ class WebScraper:
         )
 
     def fetch_page_source(self) -> str:
-        self._driver.get(self._url)
+        if not self._driver:
+            raise Exception("Driver is not initialized")
+        self._driver.get(url=self.HOME_URL)
         return self._driver.page_source
 
     @classmethod
@@ -39,7 +41,8 @@ class WebScraper:
         return [element.text for element in soup.find_all('p')]
 
     def close(self) -> None:
-        self._driver.quit()
+        if self._driver:
+            self._driver.quit()
 
 
 if __name__ == '__main__':
