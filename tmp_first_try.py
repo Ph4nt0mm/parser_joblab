@@ -11,8 +11,14 @@ class WebScraper:
     def __init__(self) -> None:
         self._driver: WebDriver = self._setup_driver()
 
+    def __enter__(self) -> 'WebScraper':
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self.close()
+
     def _setup_driver(self) -> WebDriver:
-        options = uc.ChromeOptions()
+        options: uc.ChromeOptions = uc.ChromeOptions()
         driver: WebDriver = uc.Chrome(options=options)
         self._apply_stealth(driver=driver)
         return driver
@@ -30,23 +36,23 @@ class WebScraper:
         )
 
     def fetch_page_source(self) -> str:
-        if not self._driver:
-            raise Exception("Driver is not initialized")
-        self._driver.get(url=self.HOME_URL)
+        self._driver.get(url=WebScraper.HOME_URL)
         return self._driver.page_source
-
-    @classmethod
-    def parse_content(cls, html: str) -> List[str]:
-        soup = BeautifulSoup(html, 'html.parser')
-        return [element.text for element in soup.find_all('p')]
 
     def close(self) -> None:
         if self._driver:
             self._driver.quit()
 
 
+class ContentParser:
+    @staticmethod
+    def parse_content(html: str) -> List[str]:
+        soup: BeautifulSoup = BeautifulSoup(html=html, features='html.parser')
+        return [element.text for element in soup.find_all(name='p')]
+
+
 if __name__ == '__main__':
     with WebScraper() as scraper:
-        page_source = scraper.fetch_page_source()
-        content = WebScraper.parse_content(page_source)
+        page_source: str = scraper.fetch_page_source()
+        content: List[str] = ContentParser.parse_content(html=page_source)
         print(content)
