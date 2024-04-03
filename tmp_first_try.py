@@ -42,8 +42,7 @@ class WebScraper:
 
 
 if __name__ == '__main__':
-    scraper = WebScraper()
-    page_source = scraper.fetch_page_source()
-    content = scraper.parse_content(page_source)
-    print(content)
-    scraper.close()
+    with WebScraper() as scraper:
+        page_source = scraper.fetch_page_source()
+        content = WebScraper.parse_content(page_source)
+        print(content)
