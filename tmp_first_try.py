@@ -14,13 +14,13 @@ class WebScraper:
     def _setup_driver(self) -> WebDriver:
         options = uc.ChromeOptions()
         driver: WebDriver = uc.Chrome(options=options)
-        self._apply_stealth(driver)
+        self._apply_stealth(driver=driver)
         return driver
 
     @staticmethod
     def _apply_stealth(driver: WebDriver) -> None:
         stealth(
-            driver,
+            driver=driver,
             languages=['en-US', 'en'],
             vendor='Google Inc.',
             platform='Win32',
