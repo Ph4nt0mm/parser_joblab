@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "ebeyshiy-parser-joblab"
+version = "0.1.0"
+description = ""
+authors = ["Fedor Tropin <tropinfyodor@it.adcombo.com>"]
+readme = "README.md"
+packages = [{include = "ebeyshiy_parser_joblab"}]
+
+[tool.poetry.dependencies]
+python = "3.11"
+selenium = "^4.19.0"
+undetected-chromedriver = "^3.5.5"
+beautifulsoup4 = "^4.12.3"
+selenium-stealth = "^1.0.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
