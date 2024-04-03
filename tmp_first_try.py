@@ -6,8 +6,9 @@ from typing import List
 
 
 class WebScraper:
-    def __init__(self, url: str = 'https://joblab.ru/resume') -> None:
-        self._url: str = url
+    HOME_URL: str = 'https://joblab.ru/resume'
+
+    def __init__(self) -> None:
         self._driver: WebDriver = self._setup_driver()
 
     def _setup_driver(self) -> WebDriver:
