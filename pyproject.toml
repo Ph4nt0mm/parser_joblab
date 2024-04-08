@@ -12,6 +12,7 @@ selenium = "^4.19.0"
 undetected-chromedriver = "^3.5.5"
 beautifulsoup4 = "^4.12.3"
 selenium-stealth = "^1.0.6"
+pydantic = "^2.6.4"
 
 
 [build-system]

@@ -1,47 +1,79 @@
+from typing import List, Tuple
+
 from bs4 import BeautifulSoup
-import undetected_chromedriver as uc
-from selenium_stealth import stealth
-from selenium.webdriver.chrome.webdriver import WebDriver
-from typing import List
+from pydantic import BaseModel
+
+from base.classes import BaseWebScraper
+
+"""
+class SearchFields:
+    KeyWords: Optional[List[str]] = ''
+    SortBy: Enum = ''
+    PaymentFrom: Optional[int] = ''
+
+    Region: Enum = ''
+    City: str = ''
+    Subway: str = ''
+    WorkSphere: Optional[Enum] = ''
+
+    WorkingSchedule: Optional[List[Enum]] = ''
+    Education: Optional[List[Enum]] = ''
+    WorkExperience: Optional[List[Enum]] = ''
+    Gender: Optional[Enum] = ''
+    DoNotShow: Optional[List[Enum]] = ''
+"""
 
 
-class WebScraper:
-    HOME_URL: str = 'https://joblab.ru/resume'
+class WorkPlace(BaseModel):
+    PeriodsOfEmployment: Tuple[str, str] = ()
+    Position: str = ""
+    Company: str = ""
+    Responsibilities: str = ""
 
-    def __init__(self) -> None:
-        self._driver: WebDriver = self._setup_driver()
 
-    def __enter__(self) -> 'WebScraper':
-        return self
+class ParsingFields(BaseModel):
+    Name: str = ""
+    Accommodation: str = ""
+    Salary: str = ""
+    WorkSchedule: str = ""  # TODO make Set[Enum]
+    EducationShort: str = ""  # TODO make Enum
+    WorkExperience: str = ""
+    Nationality: str = ""
+    Gender: str = ""
+    Age: str = ""
 
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        self.close()
 
-    def _setup_driver(self) -> WebDriver:
-        options: uc.ChromeOptions = uc.ChromeOptions()
-        driver: WebDriver = uc.Chrome(options=options)
-        self._apply_stealth(driver=driver)
-        return driver
+"""
+class ParsingFields:
+    ...
+    Contacts = ...
+    ...
+    WorkExperienceDetailed: List[Education]
+    EducationDetailed: List[Education]
+    OtherInformation: ...
 
-    @staticmethod
-    def _apply_stealth(driver: WebDriver) -> None:
-        stealth(
-            driver=driver,
-            languages=['en-US', 'en'],
-            vendor='Google Inc.',
-            platform='Win32',
-            webgl_vendor='Intel Inc.',
-            renderer='Intel Iris OpenGL Engine',
-            fix_hairline=True
-        )
+
+class WorkPlace(BaseModel):
+    PeriodOfEmployment = ...
+    Position = ...
+    Company = ...
+    Responsibilities = ...
+    
+
+class Education:
+    Education: str = ...
+    Graduation: str = ...
+    School: str = ...
+    Specialty: str = ...
+"""
+
+
+class JobLabScraper(BaseWebScraper):
+    HOME_URL: str = 'https://joblab.ru/resume'  # TODO mace ABC param
 
     def fetch_page_source(self) -> str:
-        self._driver.get(url=WebScraper.HOME_URL)
+        self._driver.get(url=JobLabScraper.HOME_URL)
         return self._driver.page_source
-
-    def close(self) -> None:
-        if self._driver:
-            self._driver.quit()
 
 
 class ContentParser:
@@ -52,7 +84,7 @@ class ContentParser:
 
 
 if __name__ == '__main__':
-    with WebScraper() as scraper:
+    with JobLabScraper() as scraper:
         page_source: str = scraper.fetch_page_source()
         content: List[str] = ContentParser.parse_content(html=page_source)
         print(content)
