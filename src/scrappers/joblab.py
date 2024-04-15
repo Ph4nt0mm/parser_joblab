@@ -1,7 +1,8 @@
 import time
-from typing import List
+from typing import List, Dict
 import undetected_chromedriver as uc
 from selenium.common import WebDriverException, NoSuchElementException
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from bs4 import BeautifulSoup
@@ -17,9 +18,10 @@ class JoblabScraper:
     @staticmethod
     def __init_driver() -> WebDriver:
         try:
-            options = uc.ChromeOptions()
+            options: Options = Options()
             options.add_argument('--headless')
-            driver = uc.Chrome(options=options)
+            options.add_argument('--disable-gpu')
+            driver: WebDriver = uc.Chrome(options=options)
             logging.info('Chrome driver started in headless mode')
             return driver
         except WebDriverException as e:
@@ -28,43 +30,80 @@ class JoblabScraper:
 
     def scrape_resume_links(self, start_url: str) -> List[str]:
         self.driver.get(start_url)
-        links = []
+        links: List[str] = []
         while True:
-            soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-            page_links = [a['href'] for a in soup.select('a.resume_link')]  # Update CSS selector if necessary
+            soup: BeautifulSoup = BeautifulSoup(self.driver.page_source, 'html.parser')
+            page_links: List[str] = [a['href'] for a in soup.select('a.resume_link')]
             if not page_links:
-                logging.warning('No resume links found on the page.')
+                logging.info('No more resume links found on the page.')
                 break
             links.extend(page_links)
-            try:
-                next_button = self.driver.find_element(By.LINK_TEXT, 'Следующая')
-                if 'disabled' in next_button.get_attribute('class'):
-                    break
-                next_button.click()
-                time.sleep(2)  # Wait for the next page of results to load
-            except NoSuchElementException:
-                logging.info('Reached the last page.')
+            if not self.__click_next_page():
                 break
+            time.sleep(2)
         return links
 
-
-    def scrape_resume_page(self, resume_url: str) -> dict:
+    def __click_next_page(self) -> bool:
         try:
-            self.driver.get(resume_url)
-            soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-            resume_data = {
-                'title': soup.find('h1').text,
-                'name': soup.find('div', class_='name').text,
-                # Continue extracting other fields...
-            }
-            logging.info(f'Data scraped for {resume_url}')
-            return resume_data
-        except Exception as e:
-            logging.error(f'Error during scraping resume page: {e}')
-            return {}
+            next_button = self.driver.find_element(By.LINK_TEXT, 'Следующая')
+            if 'disabled' in next_button.get_attribute('class'):
+                return False
+            next_button.click()
+            return True
+        except NoSuchElementException:
+            logging.info('Reached the last page or next button not found.')
+            return False
+
+    # def scrape_resume_page(self, resume_url: str) -> Dict[str, any]:
+    #     try:
+    #         self.driver.get(resume_url)
+    #         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+    #         resume_data = {
+    #             'title': soup.find('h1').text,
+    #             'name': soup.find('div', class_='name').text,
+    #             # Continue extracting other fields...
+    #         }
+    #         logging.info(f'Data scraped for {resume_url}')
+    #         return resume_data
+    #     except Exception as e:
+    #         logging.error(f'Error during scraping resume page: {e}')
+    #         return {}
+
+    def _scrape_resume_page(self, resume_url: str) -> Dict[str, any]:
+        self.driver.get(resume_url)
+        soup: BeautifulSoup = BeautifulSoup(self.driver.page_source, 'html.parser')
+        resume_data: Dict[str, any] = {
+            'title': soup.find('h1').text.strip(),
+            'name': self._extract_text(soup, 'Имя'),
+            'contact': self._extract_text(soup, 'Контакты'),
+            'photo_url': self._extract_photo_url(soup),
+            'general_info': self._extract_text(soup, 'Общая информация'),
+            'experience': self._extract_experience(soup),
+            'education': self._extract_education(soup),
+            'additional_info': self._extract_text(soup, 'Дополнительная информация')
+        }
+        return resume_data
+
+    @staticmethod
+    def _extract_text(soup: BeautifulSoup, section_title: str) -> str:
+        section = soup.find('p', text=section_title)
+        return section.find_next('div').text.strip() if section else 'Not Available'
+
+    @staticmethod
+    def _extract_photo_url(soup: BeautifulSoup) -> str:
+        style = soup.find('div', class_='resume_img')['style']
+        return style.split('url(')[1].split(')')[0].strip() if style else 'No Image'
+
+    @staticmethod
+    def _extract_experience(soup: BeautifulSoup) -> List[str]:
+        return [div.text.strip() for div in soup.find_all('div', class_='experience')]
+
+    @staticmethod
+    def _extract_education(soup: BeautifulSoup) -> List[str]:
+        return [div.text.strip() for div in soup.find_all('div', class_='education')]
 
     def collect_data(self, links: List[str]) -> pd.DataFrame:
-        resumes = [self.scrape_resume_page(url) for url in links]
+        resumes: List[Dict[str, any]] = [self.scrape_resume_page(url=link) for link in links]
         return pd.DataFrame(resumes)
 
     def set_search_parameters(
@@ -137,10 +176,10 @@ class JoblabScraper:
 
 
 if __name__ == '__main__':
-    scraper = JoblabScraper()
+    scraper: JoblabScraper = JoblabScraper()
     try:
-        links = scraper.scrape_resume_links('https://joblab.ru/resume')
-        data = scraper.collect_data(links)
-        print(data)
+        links: List[str] = scraper.scrape_resume_links(start_url='https://joblab.ru/resume')
+        data: pd.DataFrame = scraper.collect_data(links=links)
+        print(data.head())
     except Exception as e:
         logging.error(f'Failed during scraping process: {e}')
