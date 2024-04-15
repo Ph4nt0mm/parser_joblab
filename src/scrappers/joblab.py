@@ -27,25 +27,26 @@ class JoblabScraper:
             raise
 
     def scrape_resume_links(self, start_url: str) -> List[str]:
-        try:
-            self.driver.get(start_url)
-            links = []
-            while True:
-                soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-                page_links = [a['href'] for a in soup.select('a.resume_link')]
-                links.extend(page_links)
-                try:
-                    next_button = self.driver.find_element(By.LINK_TEXT, 'Следующая')
-                    if 'disabled' in next_button.get_attribute('class'):
-                        break
-                    next_button.click()
-                except NoSuchElementException:
-                    logging.info('No more pages to navigate')
+        self.driver.get(start_url)
+        links = []
+        while True:
+            soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+            page_links = [a['href'] for a in soup.select('a.resume_link')]  # Update CSS selector if necessary
+            if not page_links:
+                logging.warning('No resume links found on the page.')
+                break
+            links.extend(page_links)
+            try:
+                next_button = self.driver.find_element(By.LINK_TEXT, 'Следующая')
+                if 'disabled' in next_button.get_attribute('class'):
                     break
-            return links
-        except Exception as e:
-            logging.error(f'Error during scraping links: {e}')
-            raise
+                next_button.click()
+                time.sleep(2)  # Wait for the next page of results to load
+            except NoSuchElementException:
+                logging.info('Reached the last page.')
+                break
+        return links
+
 
     def scrape_resume_page(self, resume_url: str) -> dict:
         try:
