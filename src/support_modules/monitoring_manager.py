@@ -7,12 +7,18 @@ class MonitoringManager:
     """
 
     def __init__(self, metrics_endpoint: str) -> None:
+        """
+        Initialize the Monitoring Manager with an APIManager for sending data.
+
+        Args:
+            metrics_endpoint: The API manager to handle API requests.
+        """
         self.metrics_endpoint = metrics_endpoint
         self.api_manager = APIManager(base_url=metrics_endpoint)
 
     def record_metric(self, metric_name: str, value: float) -> None:
         """
-        Sends a metric to the monitoring endpoint for tracking and alerting purposes.
+        Sends a metric to the monitoring service for tracking and alerting purposes.
 
         Args:
             metric_name (str): Name of the metric to record.
@@ -26,11 +32,13 @@ class MonitoringManager:
 
     def alert(self, message: str) -> None:
         """
-        Sends an alert message to the monitoring system.
+        Sends an alert message to the monitoring service.
 
         Args:
             message (str): The alert message to send.
         """
         self.api_manager.send_request(
-            endpoint='/alert', params={'message': message}, method='POST'
+            endpoint='/alert',
+            params={'message': message},
+            method='POST'
         )
