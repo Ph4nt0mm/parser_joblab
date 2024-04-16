@@ -64,7 +64,10 @@ class JobLabScraper:
             logging.info(msg='Cannot navigate to next page, next button not found.')
 
     def __collect_data(self, links: List[str]) -> pd.DataFrame:
-        _resumes = [self.__scrape_resume_page(resume_url=f'{self.BASE_URL}{link}') for link in links]
+        _resumes = [
+            self.__scrape_resume_page(resume_url=f'{self.BASE_URL}{link}')
+            for link in links
+        ]
         return pd.DataFrame(_resumes)
 
     def __scrape_resume_page(self, resume_url: str) -> Dict[str, any]:
@@ -78,7 +81,7 @@ class JobLabScraper:
             'general_info': self._extract_text(soup, 'Общая информация'),
             'experience': self._extract_experience(soup),
             'education': self._extract_education(soup),
-            'additional_info': self._extract_text(soup, 'Дополнительная информация')
+            'additional_info': self._extract_text(soup, 'Дополнительная информация'),
         }
         return resume_data
 
