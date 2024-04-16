@@ -1,4 +1,4 @@
-from base.classes import ConfigManager
+from src.support_modules.monitoring_manager import MonitoringManager
 
 
 class PerformanceOptimizer:
@@ -6,8 +6,14 @@ class PerformanceOptimizer:
     Optimizes the performance of the scraping system based on dynamic conditions.
     """
 
-    def __init__(self, config_manager: ConfigManager) -> None:
-        self.config_manager = config_manager
+    def __init__(self, monitoring_manager: MonitoringManager) -> None:
+        """
+        Initialize the Performance Optimizer with a MonitoringManager.
+
+        Args:
+            monitoring_manager (MonitoringManager): The monitoring manager to interact with.
+        """
+        self.monitoring_manager = monitoring_manager
 
     def adjust_concurrency(self, target_concurrency: int) -> None:
         """
@@ -17,7 +23,7 @@ class PerformanceOptimizer:
             target_concurrency (int): The desired concurrency level.
         """
         # Implementation would adjust internal thread pools or async operations
-        pass
+        self.monitoring_manager.record_metric('concurrency_level', float(target_concurrency))
 
     def throttle_requests(self, rate_limit: float) -> None:
         """
@@ -27,4 +33,4 @@ class PerformanceOptimizer:
             rate_limit (float): The maximum number of requests per second.
         """
         # Implementation could involve a token bucket algorithm or similar
-        pass
+        self.monitoring_manager.record_metric('rate_limit', rate_limit)
