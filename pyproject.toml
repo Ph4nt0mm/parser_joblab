@@ -14,6 +14,7 @@ beautifulsoup4 = "^4.12.3"
 selenium-stealth = "^1.0.6"
 pydantic = "^2.6.4"
 pandas = "^2.2.2"
+axblack = "^20220330"
 
 
 [build-system]
