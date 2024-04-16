@@ -1,17 +1,12 @@
 import json
 import logging
-from abc import ABC, abstractmethod
-
-import pandas as pd
-from bs4 import BeautifulSoup
-from selenium.webdriver.chrome.webdriver import WebDriver
 
 
 class Logger:
     def __init__(self, name: str, log_file: str) -> None:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
-        fh = logging.FileHandler(log_file)
+        fh = logging.FileHandler(filename=log_file)
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
