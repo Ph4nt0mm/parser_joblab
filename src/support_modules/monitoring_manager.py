@@ -18,7 +18,11 @@ class MonitoringManager:
             metric_name (str): Name of the metric to record.
             value (float): Value of the metric to record.
         """
-        self.api_manager.send_request(endpoint='/metrics', params={'metric': metric_name, 'value': value}, method='POST')
+        self.api_manager.send_request(
+            endpoint='/metrics',
+            params={'metric': metric_name, 'value': value},
+            method='POST',
+        )
 
     def alert(self, message: str) -> None:
         """
@@ -27,4 +31,6 @@ class MonitoringManager:
         Args:
             message (str): The alert message to send.
         """
-        self.api_manager.send_request(endpoint='/alert', params={'message': message}, method='POST')
+        self.api_manager.send_request(
+            endpoint='/alert', params={'message': message}, method='POST'
+        )

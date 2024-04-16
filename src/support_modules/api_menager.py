@@ -10,7 +10,9 @@ class APIManager:
         self.base_url = base_url
         self.session = Session()
 
-    def send_request(self, endpoint: str, params: dict = None, method: str = 'GET', data: dict = None) -> Response:
+    def send_request(
+        self, endpoint: str, params: dict = None, method: str = 'GET', data: dict = None
+    ) -> Response:
         """
         Sends a request to the specified API endpoint.
 
@@ -23,7 +25,7 @@ class APIManager:
         Returns:
             Response: The response object from the API server.
         """
-        url = f"{self.base_url}{endpoint}"
+        url = f'{self.base_url}{endpoint}'
         if method.upper() == 'GET':
             return self.session.get(url, params=params)
         elif method.upper() == 'POST':

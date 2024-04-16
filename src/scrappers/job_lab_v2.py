@@ -65,7 +65,6 @@ class JobLabLinkNavigator(abc_classes.LinkNavigatorABC):
 
 
 class JobLabDataProcessor(abc_classes.DataProcessorABC):
-
     def __init__(self) -> None:
         super().__init__()
 
