@@ -1,191 +1,67 @@
+import json
+import logging
 from abc import ABC, abstractmethod
 
 import pandas as pd
 from bs4 import BeautifulSoup
-from requests.sessions import Session
 from selenium.webdriver.chrome.webdriver import WebDriver
 
 
-class DriverManagerABC(ABC):
-    """
-    Abstract base class defining the interface for a WebDriver manager.
-    """
-
-    @abstractmethod
-    def __init__(self, driver_path: str, headless: bool) -> None:
-        raise NotImplementedError('Method "__init__" not implemented')
-
-    @abstractmethod
-    def _init_driver(self) -> WebDriver:
-        raise NotImplementedError('Method "_init_driver" not implemented')
-
-    @abstractmethod
-    def close_driver(self) -> None:
-        raise NotImplementedError('Method "close_driver" not implemented')
-
-
-class ScraperABC(ABC):
-    """
-    Abstract base class defining the interface for a web scraper.
-    """
-
-    @abstractmethod
-    def __init__(self, driver_manager: DriverManagerABC) -> None:
-        raise NotImplementedError('Method "__init__" not implemented')
-
-    @abstractmethod
-    def scrape(self, start_url: str) -> pd.DataFrame:
-        raise NotImplementedError('Method "scrape" not implemented')
-
-
-class DataExtractorABC(ABC):
-    """
-    Abstract base class defining the interface for data extraction from HTML content.
-    """
-
-    @staticmethod
-    @abstractmethod
-    def extract_text(soup: BeautifulSoup, selector: str) -> str:
-        raise NotImplementedError('Method "extract_text" not implemented')
-
-    @staticmethod
-    @abstractmethod
-    def extract_attribute(soup: BeautifulSoup, selector: str, attribute: str) -> str:
-        raise NotImplementedError('Method "extract_attribute" not implemented')
-
-    @staticmethod
-    @abstractmethod
-    def extract_links(soup: BeautifulSoup, selector: str) -> list:
-        raise NotImplementedError('Method "extract_links" not implemented')
-
-
-class LinkNavigatorABC(ABC):
-    """
-    Abstract base class defining the interface for navigating through web pages.
-    """
-
-    @abstractmethod
-    def __init__(self, driver_manager: DriverManagerABC) -> None:
-        raise NotImplementedError('Method "__init__" not implemented')
-
-    @abstractmethod
-    def navigate_to_url(self, url: str) -> None:
-        raise NotImplementedError('Method "navigate_to_url" not implemented')
-
-    @abstractmethod
-    def find_next_page(self) -> bool:
-        raise NotImplementedError('Method "find_next_page" not implemented')
-
-    @abstractmethod
-    def go_back(self) -> None:
-        raise NotImplementedError('Method "go_back" not implemented')
-
-    @abstractmethod
-    def refresh_page(self) -> None:
-        raise NotImplementedError('Method "refresh_page" not implemented')
-
-
-class LoggerABC(ABC):
-    """
-    Abstract base class defining the interface for a logging system.
-    """
-
-    @abstractmethod
+class Logger:
     def __init__(self, name: str, log_file: str) -> None:
-        raise NotImplementedError('Constructor "__init__" not implemented')
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(log_file)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
 
-    @abstractmethod
     def info(self, message: str) -> None:
-        raise NotImplementedError('Method "info" not implemented')
+        self.logger.info(message)
 
-    @abstractmethod
     def warning(self, message: str) -> None:
-        raise NotImplementedError('Method "warning" not implemented')
+        self.logger.warning(message)
 
-    @abstractmethod
     def error(self, message: str) -> None:
-        raise NotImplementedError('Method "error" not implemented')
+        self.logger.error(message)
 
 
-class ConfigManagerABC(ABC):
-    """
-    Abstract base class defining the interface for managing configuration settings.
-    """
-
-    @abstractmethod
+class ConfigManager:
     def __init__(self, config_path: str) -> None:
-        raise NotImplementedError('Constructor "__init__" not implemented')
+        self.config_path = config_path
+        self.settings = self._load_config()
 
-    @abstractmethod
+    def _load_config(self) -> dict:
+        with open(self.config_path, 'r') as config_file:
+            return json.load(config_file)
+
     def get_setting(self, key: str) -> any:
-        raise NotImplementedError('Method "get_setting" not implemented')
+        return self.settings.get(key, None)
 
-    @abstractmethod
     def update_setting(self, key: str, value: any) -> None:
-        raise NotImplementedError('Method "update_setting" not implemented')
+        self.settings[key] = value
+        with open(self.config_path, 'w') as config_file:
+            json.dump(self.settings, config_file, indent=4)
 
 
-class ErrorHandlerABC(ABC):
-    """
-    Abstract base class defining the interface for handling errors during scraping operations.
-    """
+class ErrorHandler:
+    def __init__(self, logger: Logger) -> None:
+        self.logger = logger
 
-    @abstractmethod
-    def __init__(self, logger: LoggerABC) -> None:
-        raise NotImplementedError('Constructor "__init__" not implemented')
-
-    @abstractmethod
     def handle(self, error: Exception, message: str) -> None:
-        raise NotImplementedError('Method "handle" not implemented')
+        self.log_error(f'{message} | Exception: {error}')
 
-    @abstractmethod
     def log_error(self, message: str) -> None:
-        raise NotImplementedError('Method "log_error" not implemented')
+        self.logger.error(message)
 
-    @abstractmethod
     def retry_operation(self, function, *args, **kwargs) -> any:
-        raise NotImplementedError('Method "retry_operation" not implemented')
-
-
-class SessionManagerABC(ABC):
-    """
-    Abstract base class defining the interface for managing session data such as cookies and headers.
-    """
-
-    @abstractmethod
-    def __init__(self) -> None:
-        raise NotImplementedError('Constructor "__init__" not implemented')
-
-    @abstractmethod
-    def add_cookie(self, cookie_dict: dict) -> None:
-        raise NotImplementedError('Method "add_cookie" not implemented')
-
-    @abstractmethod
-    def update_headers(self, headers: dict) -> None:
-        raise NotImplementedError('Method "update_headers" not implemented')
-
-    @abstractmethod
-    def get_session(self) -> Session:
-        raise NotImplementedError('Method "get_session" not implemented')
-
-
-class DataProcessorABC(ABC):
-    """
-    Abstract base class defining the interface for processing and transforming data collected during scraping.
-    """
-
-    @abstractmethod
-    def __init__(self) -> None:
-        raise NotImplementedError('Constructor "__init__" not implemented')
-
-    @abstractmethod
-    def clean_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        raise NotImplementedError('Method "clean_data" not implemented')
-
-    @abstractmethod
-    def transform_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        raise NotImplementedError('Method "transform_data" not implemented')
-
-    @abstractmethod
-    def merge_data(self, data_list: list) -> pd.DataFrame:
-        raise NotImplementedError('Method "merge_data" not implemented')
+        attempts = 3
+        for attempt in range(attempts):
+            try:
+                return function(*args, **kwargs)
+            except Exception as e:
+                self.log_error(f'Retry {attempt + 1}/{attempts} failed: {e}')
+                if attempt == attempts - 1:
+                    raise e
