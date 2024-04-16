@@ -6,15 +6,14 @@ class MonitoringManager:
     Monitors the health and performance of the scraping system.
     """
 
-    def __init__(self, metrics_endpoint: str) -> None:
+    def __init__(self, api_manager: APIManager) -> None:
         """
         Initialize the Monitoring Manager with an APIManager for sending data.
 
         Args:
-            metrics_endpoint: The API manager to handle API requests.
+            api_manager (APIManager): The API manager to handle API requests.
         """
-        self.metrics_endpoint = metrics_endpoint
-        self.api_manager = APIManager(base_url=metrics_endpoint)
+        self.api_manager = api_manager
 
     def record_metric(self, metric_name: str, value: float) -> None:
         """
