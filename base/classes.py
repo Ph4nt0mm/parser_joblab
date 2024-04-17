@@ -1,5 +1,6 @@
 import json
 import logging
+from time import sleep
 
 
 class Logger:
@@ -51,12 +52,25 @@ class ErrorHandler:
     def log_error(self, message: str) -> None:
         self.logger.error(message)
 
-    def retry_operation(self, function, *args, **kwargs) -> any:
-        attempts = 3
-        for attempt in range(attempts):
+    def retry_operation(
+        self, function, *args, max_retries=3, backoff_in_seconds=2, **kwargs
+    ) -> any:
+        """
+        Retry operation with exponential backoff.
+
+        Args:
+            function: The function to retry.
+            max_retries (int): Maximum number of retries.
+            backoff_in_seconds (int): Initial backoff interval in seconds.
+            args, kwargs: Arguments for the function.
+        """
+        attempt = 0
+        while attempt < max_retries:
             try:
                 return function(*args, **kwargs)
             except Exception as e:
-                self.log_error(f'Retry {attempt + 1}/{attempts} failed: {e}')
-                if attempt == attempts - 1:
-                    raise e
+                self.log_error(f'Retry {attempt + 1}/{max_retries}  failed: {e}')
+                sleep(backoff_in_seconds * (2 ** attempt))
+                attempt += 1
+        self.log_error(f'All retries failed for function: {function}.')
+        return None
