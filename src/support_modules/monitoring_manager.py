@@ -37,7 +37,5 @@ class MonitoringManager:
             message (str): The alert message to send.
         """
         self.api_manager.send_request(
-            endpoint='/alert',
-            params={'message': message},
-            method='POST'
+            endpoint='/alert', params={'message': message}, method='POST'
         )

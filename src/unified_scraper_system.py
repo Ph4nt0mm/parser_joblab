@@ -1,4 +1,8 @@
-from src.scrappers.job_lab_v2 import JobLabDriverManager, JobLabScraper, JobLabDataProcessor
+from src.scrappers.job_lab_v2 import (
+    JobLabDriverManager,
+    JobLabScraper,
+    JobLabDataProcessor,
+)
 from src.support_modules.api_menager import APIManager
 from src.support_modules.monitoring_manager import MonitoringManager
 from src.support_modules.performance_optimizer import PerformanceOptimizer
@@ -19,7 +23,9 @@ class UnifiedScraper:
         """
         self.api_manager = APIManager(base_url)
         self.monitoring_manager = MonitoringManager(self.api_manager)
-        self.driver_manager = JobLabDriverManager(driver_path=driver_path, headless=True)
+        self.driver_manager = JobLabDriverManager(
+            driver_path=driver_path, headless=True
+        )
         self.scraper = JobLabScraper(self.driver_manager)
         self.data_processor = JobLabDataProcessor()
         self.performance_optimizer = PerformanceOptimizer(self.monitoring_manager)
@@ -39,11 +45,13 @@ class UnifiedScraper:
             # Start scraping
             data = self.scraper.scrape(start_url)
             clean_data = self.data_processor.clean_data(data)
-            self.monitoring_manager.record_metric('data_rows_collected', float(len(clean_data)))
+            self.monitoring_manager.record_metric(
+                'data_rows_collected', float(len(clean_data))
+            )
 
             # Further processing and storage operations can be added here
         except Exception as e:
-            self.monitoring_manager.alert(f"Scraping failed: {str(e)}")
+            self.monitoring_manager.alert(f'Scraping failed: {str(e)}')
             raise
 
     def shutdown(self) -> None:

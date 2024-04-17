@@ -23,7 +23,9 @@ class PerformanceOptimizer:
             target_concurrency (int): The desired concurrency level.
         """
         # Implementation would adjust internal thread pools or async operations
-        self.monitoring_manager.record_metric('concurrency_level', float(target_concurrency))
+        self.monitoring_manager.record_metric(
+            'concurrency_level', float(target_concurrency)
+        )
 
     def throttle_requests(self, rate_limit: float) -> None:
         """
