@@ -78,3 +78,7 @@ class JobLabDataProcessor(abc_classes.DataProcessorABC):
 
     def merge_data(self, data_list: list) -> pd.DataFrame:
         return pd.concat(data_list, ignore_index=True)
+
+    @staticmethod
+    def normalize_data(data: pd.DataFrame) -> pd.DataFrame:
+        return data.apply(lambda x: x.str.lower() if x.dtype == "object" else x)

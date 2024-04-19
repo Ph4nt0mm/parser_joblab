@@ -1,5 +1,3 @@
-import json
-import logging
 from abc import ABC, abstractmethod
 
 import pandas as pd
@@ -80,3 +78,8 @@ class DataProcessorABC(ABC):
     @abstractmethod
     def merge_data(self, data_list: list) -> pd.DataFrame:
         raise NotImplementedError('Method "merge_data" not implemented')
+
+    @staticmethod
+    @abstractmethod
+    def normalize_data(data: pd.DataFrame) -> pd.DataFrame:
+        raise NotImplementedError('Method "normalize_data" not implemented')
