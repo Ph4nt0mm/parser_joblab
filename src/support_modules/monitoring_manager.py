@@ -39,3 +39,12 @@ class MonitoringManager:
         self.api_manager.send_request(
             endpoint='/alert', params={'message': message}, method='POST'
         )
+
+    def track_performance(self, metric_name: str, value: float, tag: str = None) -> None:
+        self.record_metric(metric_name, value)
+        if tag:
+            self.api_manager.send_request(
+                endpoint='/metrics/tagged',
+                params={'metric': metric_name, 'value': value, 'tag': tag},
+                method='POST'
+            )
