@@ -47,7 +47,7 @@ class JobLabScraper:
         page_number = 1
         while self.__has_next_page():
             parsed_links = self.__extract_links()
-            print(f'Page {page_number} parsed. Links: {parsed_links}')
+            logging.info(f'Page {page_number} parsed. Links: {parsed_links}')
             links.extend(parsed_links)
             self.__go_to_next_page()
             time.sleep(2)
@@ -82,7 +82,7 @@ class JobLabScraper:
         return pd.DataFrame(_resumes)
 
     def __scrape_resume_page(self, resume_url: str) -> Dict[str, any]:
-        print(resume_url)
+        logging.info(resume_url)
         self.__driver.get(resume_url)
         soup = BeautifulSoup(self.__driver.page_source, 'html.parser')
         resume_data: Dict[str, any] = {
@@ -175,13 +175,13 @@ class JobLabScraper:
 if __name__ == '__main__':
     try:
         scraper: JobLabScraper = JobLabScraper()
-        print(1)
+        logging.info(1)
         _data = scraper.scrape()
-        print(2)
-        print(_data.head())
-        print(3)
+        logging.info(2)
+        logging.info(_data.head())
+        logging.info(3)
         _data.to_csv('C:\\Users\\f.tropin\\Documents\\work\\ebeyshiy_parser_joblab\\result.csv')
-        print(4)
+        logging.info(4)
 
     except Exception as e:
         logging.error(msg=f'Failed during scraping process: {e}')
