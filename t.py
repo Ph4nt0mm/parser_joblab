@@ -1,4 +1,4 @@
-from loguru import logger
+import sys
 import time
 from pprint import pformat
 from typing import List, Dict
@@ -6,13 +6,16 @@ from typing import List, Dict
 import pandas as pd
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup
+from loguru import logger
 from selenium.common import NoSuchElementException, WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 
+from settings.config import settings
 
-logger.add(sink="sys.stdout", format="{time} {level} {message}", level='ERROR')
+logger.remove()
+logger.add(sink=sys.stderr,  level=settings.LOGURU_LEVEL)
 pd.set_option('display.max_columns', None)
 
 
