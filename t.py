@@ -1,7 +1,6 @@
-import json
-import logging
+from loguru import logger
 import time
-from pprint import pprint
+from pprint import pformat
 from typing import List, Dict
 
 import pandas as pd
@@ -13,6 +12,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 
 
+logger.add(sink="sys.stdout", format="{time} {level} {message}", level='ERROR')
 pd.set_option('display.max_columns', None)
 
 
@@ -29,10 +29,10 @@ class JobLabScraper:
             _options.add_argument(argument='--headless')
             _options.add_argument(argument='--disable-gpu')
             driver: WebDriver = uc.Chrome(options=_options)
-            logging.info(msg='Chrome driver started in headless mode')
+            logger.info('Chrome driver started in headless mode')
             return driver
         except WebDriverException as e:
-            logging.error(msg=f'Failed to initialize driver: {e}')
+            logger.error(f'Failed to initialize driver: {e}')
             raise
 
     def scrape(self, path: str = '/resume') -> pd.DataFrame:
@@ -41,19 +41,21 @@ class JobLabScraper:
         return data
 
     def __scrape_resume_links(self, start_url: str) -> List[str]:
-        logging.info(msg='Scrapping links')
+        logger.info('Scrapping links')
         self.__driver.get(start_url)
         links: List[str] = []
         page_number = 1
         while self.__has_next_page():
             parsed_links = self.__extract_links()
-            logging.info(f'Page {page_number} parsed. Links: {parsed_links}')
             links.extend(parsed_links)
+            logger.info(f'Page {page_number} parsed. Links: {parsed_links}')
             self.__go_to_next_page()
-            time.sleep(2)
+
             page_number += 1
             if page_number == 2:
                 return links
+
+            time.sleep(2)
 
         return links
 
@@ -66,7 +68,7 @@ class JobLabScraper:
             self.__driver.find_element(By.LINK_TEXT, 'Следующая →')
             return True
         except NoSuchElementException:
-            logging.info(msg='No next page button found.')
+            logger.info('No next page button found.')
             return False
 
     def __go_to_next_page(self) -> None:
@@ -74,15 +76,14 @@ class JobLabScraper:
             _next_button = self.__driver.find_element(By.LINK_TEXT, 'Следующая →')
             _next_button.click()
         except NoSuchElementException:
-            logging.info(msg='Cannot navigate to next page, next button not found.')
+            logger.info('Cannot navigate to next page, next button not found.')
 
     def __collect_data(self, links: List[str]) -> pd.DataFrame:
-        logging.info(msg='Starting collecting data')
         _resumes = [self.__scrape_resume_page(resume_url=f'{self.BASE_URL}{link}') for link in links]
+        logger.info('Scrapping data from resume pages')
         return pd.DataFrame(_resumes)
 
     def __scrape_resume_page(self, resume_url: str) -> Dict[str, any]:
-        logging.info(resume_url)
         self.__driver.get(resume_url)
         soup = BeautifulSoup(self.__driver.page_source, 'html.parser')
         resume_data: Dict[str, any] = {
@@ -175,13 +176,11 @@ class JobLabScraper:
 if __name__ == '__main__':
     try:
         scraper: JobLabScraper = JobLabScraper()
-        logging.info(1)
         _data = scraper.scrape()
-        logging.info(2)
-        logging.info(_data.head())
-        logging.info(3)
+        logger.info(f'Data scraped: {_data.shape}')
+
         _data.to_csv('C:\\Users\\f.tropin\\Documents\\work\\ebeyshiy_parser_joblab\\result.csv')
-        logging.info(4)
+        logger.info('Data saved')
 
     except Exception as e:
-        logging.error(msg=f'Failed during scraping process: {e}')
+        logger.error(f'Failed during scraping process: {e}')
