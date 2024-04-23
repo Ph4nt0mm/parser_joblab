@@ -128,7 +128,7 @@ class JobLabScraper:
             if page_number == 2:
                 return links
 
-            time.sleep(2)
+            time.sleep(settings.SLEEEP_BETWEEN_REQUESTS)
 
         return links
 
@@ -156,7 +156,7 @@ class JobLabScraper:
         _resumes = []
         for link in links:
             _resumes.append(self.__scrape_resume_page(resume_url=f'{self.BASE_URL}{link}'))
-            time.sleep(2)
+            time.sleep(settings.SLEEEP_BETWEEN_REQUESTS)
         return pd.DataFrame(_resumes)
 
     def __scrape_resume_page(self, resume_url: str) -> Dict[str, any]:
