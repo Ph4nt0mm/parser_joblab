@@ -24,7 +24,7 @@ class JobLabDataParser:
             section = soup.find('p', string=section_title).parent
             second_parent = section.parent
             result = second_parent.find_all(recursive=False)[1].text.strip()
-            logger.info(
+            logger.debug(
                 f'\nFor field:\t {section_title}\n'
                 f'Extracted text:\t{result}'
             )
