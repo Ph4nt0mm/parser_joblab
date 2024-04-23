@@ -177,7 +177,8 @@ class JobLabScraper:
             'Age': JobLabDataParser.extract_text(soup, 'Возраст'),
             'Experience detailed': JobLabDataParser.extract_block_with_sub_blocks(soup, 'Опыт работы'),
             'Education detailed': JobLabDataParser.extract_detailed_block(soup, 'Образование'),
-            'Additional info': JobLabDataParser.extract_detailed_block(soup, 'Дополнительная информация')
+            'Additional info': JobLabDataParser.extract_detailed_block(soup, 'Дополнительная информация'),
+            'Resume link': f'{self.BASE_URL}{resume_url}',
         }
         logger.debug(
             f'\nScraped data from:\t {resume_url}\n'
