@@ -16,6 +16,76 @@ logger.add(sink="sys.stdout", format="{time} {level} {message}", level='ERROR')
 pd.set_option('display.max_columns', None)
 
 
+class JobLabDataParser:
+    @staticmethod
+    def extract_text(soup: BeautifulSoup, section_title: str) -> str:
+        section = soup.find('p', string=section_title)
+        if section:
+            section = soup.find('p', string=section_title).parent
+            second_parent = section.parent
+            result = second_parent.find_all(recursive=False)[1].text.strip()
+            logger.info(
+                f'\nFor field:\t {section_title}\n'
+                f'Extracted text:\t{result}'
+            )
+            return result
+        else:
+            return 'Not Available'
+
+    @staticmethod
+    def extract_photo_url(soup: BeautifulSoup) -> str:
+        img_div = soup.find('div', class_='resume_img')
+        if img_div:
+            style = img_div['style']
+            result = style.split('url(')[1].split(')')[0].strip() if style else 'No Image'
+            return result
+        else:
+            return 'No Image'
+
+    @staticmethod
+    def extract_detailed_block(soup: BeautifulSoup, block_title: str) -> Dict[str, Dict[str, str]]:
+        h2_block = soup.find('h2', string=block_title)
+
+        result_dict = {block_title: {}}
+
+        if h2_block:
+            for sibling in h2_block.find_parent('tr').find_next_siblings('tr'):
+                if len(sibling.find_all('td')) <= 1:
+                    break
+                key = sibling.find_all('td')[0].get_text(strip=True)
+                value = sibling.find_all('td')[1].get_text(strip=True)
+                result_dict[block_title][key] = value
+        return result_dict
+
+    @staticmethod
+    def extract_block_with_sub_blocks(soup: BeautifulSoup, block_title: str) -> List[Dict[str, Dict[str, str]]]:
+        # Find the 'Образование' section
+        education_header = soup.find('h2', string=block_title)
+
+        result_data = []
+        current_block_data = {}
+
+        if education_header:
+            for sibling in education_header.find_parent('tr').find_next_siblings('tr'):
+                # Check for stopping conditions
+                if len(sibling.find_all('td')) <= 1:
+                    if current_block_data:
+                        result_data.append(current_block_data)
+                        return result_data
+                else:
+                    key, value = (cell.get_text(strip=True) for cell in sibling.find_all('td'))
+                    current_block_data[key] = value
+
+                if sibling.find('hr') is not None:
+                    if current_block_data:
+                        result_data.append(current_block_data)
+                    current_block_data = {}
+
+        if current_block_data:
+            result_data.append(current_block_data)
+        return result_data
+
+
 class JobLabScraper:
     BASE_URL = 'https://joblab.ru'
 
@@ -79,98 +149,44 @@ class JobLabScraper:
             logger.info('Cannot navigate to next page, next button not found.')
 
     def __collect_data(self, links: List[str]) -> pd.DataFrame:
-        _resumes = [self.__scrape_resume_page(resume_url=f'{self.BASE_URL}{link}') for link in links]
         logger.info('Scrapping data from resume pages')
+        _resumes = []
+        for link in links:
+            _resumes.append(self.__scrape_resume_page(resume_url=f'{self.BASE_URL}{link}'))
+            time.sleep(2)
         return pd.DataFrame(_resumes)
 
     def __scrape_resume_page(self, resume_url: str) -> Dict[str, any]:
         self.__driver.get(resume_url)
         soup = BeautifulSoup(self.__driver.page_source, 'html.parser')
         resume_data: Dict[str, any] = {
-            'title': soup.find('h1').text.strip(),
-            'name': self._extract_text(soup, 'Имя'),
-            'contact': self._extract_text(soup, 'Контакты'),
-            'photo_url': self._extract_photo_url(soup),
-            'Accommodation': self._extract_text(soup, 'Проживание'),
-            'wage': self._extract_text(soup, 'Заработная плата'),
-            'schedule': self._extract_text(soup, 'График работы'),
-            'education': self._extract_text(soup, 'Образование'),
-            'experience': self._extract_text(soup, 'Опыт работы'),
-            'citizenship': self._extract_text(soup, 'Гражданство'),
-            'gender': self._extract_text(soup, 'Пол'),
-            'age': self._extract_text(soup, 'Возраст'),
-            'experience detailed': self._extract_block_with_sub_blocks(soup, 'Опыт работы'),
-            'education detailed': self._extract_detailed_block(soup, 'Образование'),
-            'additional info': self._extract_detailed_block(soup, 'Дополнительная информация')
+            'Title': soup.find('h1').text.strip(),
+            'Name': JobLabDataParser.extract_text(soup, 'Имя'),
+            'Contact': JobLabDataParser.extract_text(soup, 'Контакты'),
+            'Photo_url': JobLabDataParser.extract_photo_url(soup),
+            'Accommodation': JobLabDataParser.extract_text(soup, 'Проживание'),
+            'Wage': JobLabDataParser.extract_text(soup, 'Заработная плата'),
+            'Schedule': JobLabDataParser.extract_text(soup, 'График работы'),
+            'Education': JobLabDataParser.extract_text(soup, 'Образование'),
+            'Experience': JobLabDataParser.extract_text(soup, 'Опыт работы'),
+            'Citizenship': JobLabDataParser.extract_text(soup, 'Гражданство'),
+            'Gender': JobLabDataParser.extract_text(soup, 'Пол'),
+            'Age': JobLabDataParser.extract_text(soup, 'Возраст'),
+            'Experience detailed': JobLabDataParser.extract_block_with_sub_blocks(soup, 'Опыт работы'),
+            'Education detailed': JobLabDataParser.extract_detailed_block(soup, 'Образование'),
+            'Additional info': JobLabDataParser.extract_detailed_block(soup, 'Дополнительная информация')
         }
-        pprint(resume_data)
+        logger.debug(
+            f'\nScraped data from:\t {resume_url}\n'
+            f'{pformat(resume_data)}'
+        )
         return resume_data
 
-    @staticmethod
-    def _extract_text(soup: BeautifulSoup, section_title: str) -> str:
-        section = soup.find('p', string=section_title)
-        if section:
-            section = soup.find('p', string=section_title).parent
-            result = section.find_next('div').text.strip() if section else 'Not Available'
-            return result
-        else:
-            return 'Not Available'
-
-    @staticmethod
-    def _extract_photo_url(soup: BeautifulSoup) -> str:
-        img_div = soup.find('div', class_='resume_img')
-        if img_div:
-            style = img_div['style']
-            result = style.split('url(')[1].split(')')[0].strip() if style else 'No Image'
-            return result
-        else:
-            return 'No Image'
-
-    @staticmethod
-    def _extract_detailed_block(soup: BeautifulSoup, block_title: str) -> Dict[str, Dict[str, str]]:
-        h2_block = soup.find('h2', string=block_title)
-
-        result_dict = {block_title: {}}
-
-        if h2_block:
-            for sibling in h2_block.find_parent('tr').find_next_siblings('tr'):
-                if len(sibling.find_all('td')) <= 1:
-                    break
-                key = sibling.find_all('td')[0].get_text(strip=True)
-                value = sibling.find_all('td')[1].get_text(strip=True)
-                result_dict[block_title][key] = value
-        return result_dict
-
-    @staticmethod
-    def _extract_block_with_sub_blocks(soup: BeautifulSoup, block_title: str) -> List[Dict[str, Dict[str, str]]]:
-        # Find the 'Образование' section
-        education_header = soup.find('h2', text=block_title)
-
-        result_data = []
-        current_block_data = {}
-
-        if education_header:
-            for sibling in education_header.find_parent('tr').find_next_siblings('tr'):
-                # Check for stopping conditions
-                if len(sibling.find_all('td')) <= 1:
-                    if current_block_data:
-                        result_data.append(current_block_data)
-                        return result_data
-                else:
-                    key, value = (cell.get_text(strip=True) for cell in sibling.find_all('td'))
-                    current_block_data[key] = value
-
-                if sibling.find('hr') is not None:
-                    if current_block_data:
-                        result_data.append(current_block_data)
-                    current_block_data = {}
-
-        if current_block_data:
-            result_data.append(current_block_data)
-        return result_data
-
     def __del__(self):
-        self.__driver.quit()
+        try:
+            self.__driver.quit()
+        except Exception as e:
+            logger.error(f"Failed to quit the driver cleanly: {str(e)}")
 
 
 if __name__ == '__main__':
