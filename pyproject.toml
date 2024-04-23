@@ -16,6 +16,8 @@ pydantic = "^2.6.4"
 pandas = "^2.2.2"
 axblack = "^20220330"
 loguru = "^0.7.2"
+pydantic-settings = "^2.2.1"
+python-dotenv = "^1.0.1"
 
 
 [build-system]
