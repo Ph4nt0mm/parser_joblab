@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     LOGURU_LEVEL: str = 'INFO'
     SLEEEP_BETWEEN_REQUESTS: int = 2
+    MAX_NUM_PAGES_WITH_LINKS: int = 3
 
     class Config:
         env_file = Path(BASE_DIR, 'settings', 'env')

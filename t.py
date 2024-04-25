@@ -124,9 +124,9 @@ class JobLabScraper:
             logger.info(f'Page {page_number} parsed. Links: {parsed_links}')
             self.__go_to_next_page()
 
-            page_number += 1
-            if page_number == 2:
+            if page_number == settings.MAX_NUM_PAGES_WITH_LINKS:
                 return links
+            page_number += 1
 
             time.sleep(settings.SLEEEP_BETWEEN_REQUESTS)
 
