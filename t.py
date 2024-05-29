@@ -198,8 +198,7 @@ if __name__ == '__main__':
         scraper: JobLabScraper = JobLabScraper()
         _data = scraper.scrape()
         logger.info(f'Data scraped: {_data.shape}')
-
-        _data.to_csv('C:\\Users\\f.tropin\\Documents\\work\\ebeyshiy_parser_joblab\\result.csv')
+        _data.to_csv(settings.OUTPUT_PATH)
         logger.info('Data saved')
 
     except Exception as e:

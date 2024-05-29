@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "ebeyshiy-parser-joblab"
+name = "parser-joblab"
 version = "0.1.0"
 description = ""
 authors = ["Fedor Tropin <tropinfyodor@it.adcombo.com>"]
 readme = "README.md"
-packages = [{include = "ebeyshiy_parser_joblab"}]
+packages = [{include = "parser_joblab"}]
 
 [tool.poetry.dependencies]
 python = "3.11"

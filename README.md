@@ -1,4 +1,4 @@
-# EbeyshiyParserJobLab
+# ParserJobLab
 
 
 * Установите python 3.11
